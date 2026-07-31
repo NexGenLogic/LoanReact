@@ -1,0 +1,170 @@
+<template>
+<div class="py-4 container-fluid">
+        <div class="mt-4 user">
+            <div class="col-12">
+                <div class="card">
+                    <!-- Card header -->
+                    <div class="card-header border-bottom">
+                        <div class="user ">
+                            <div class=" d-flex justify-content-center gap-5">
+                                
+                            
+                              <span>Role</span> : 
+                              <div style="display: flex;flex-direction: column;">
+                                <input type="text" name="role" id="role" class="role-input">
+                                <div v-show="show_error" style="color:red">Role is missing!</div>
+                              </div>
+                              
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="px-0 pb-0 card-body py-0">
+                      <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Module</th>
+                                <th v-for="permission in permissions" :key="permission" class="text-center">{{ permission }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="(modulePerms, module) in module_permissions" :key="module">
+                                <td><strong>{{ module }}</strong></td>
+                                <td
+                                  v-for="permission in permissions"
+                                  :key="permission"
+                                  class="text-center"
+                                >
+                            
+                                  <material-checkbox
+                                     v-model="selected_permissions[module][permission]"
+                                    :disabled="!checkIfPermissionExist(modulePerms, permission)"
+                                     :key="`${module}_${permission}`"
+                                  ></material-checkbox>
+                                </td>
+                              </tr>
+                            </tbody>
+
+                          </table>
+                          </div>
+                          <div class="d-flex justify-content-end  m-5">
+                              <material-button class="float-right btn btm-sm" @click="savePermissions">
+                                <span v-if="loading == false">{{ $t('message.save') }}</span>
+                                <PulseLoader v-if="loading" text="Saving" />
+                              </material-button>
+                          </div>
+                          
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </template>
+  
+  <script>
+  import MaterialButton from "@/components/MaterialButton.vue";
+  import {fetchPermissions, createRole} from "../utils/role_services";
+  import showSwal from "@/mixins/showSwal";
+  import MaterialCheckbox from "@/components/MaterialCheckbox.vue";
+  import PulseLoader from "./PulseLoader.vue";
+  export default {
+    name: "RolePermissionForm",
+    components: {
+      MaterialButton,
+      MaterialCheckbox,
+      PulseLoader
+    },
+    data() {
+      return {
+        show_error : false,
+        module_permissions : {},
+        roleName: "",
+        permissions : [],
+        selected_permissions: {},
+        loading: false
+      };
+    },
+    async mounted() {
+        this.loadPermissions();
+
+    },
+
+    methods: {
+       checkIfPermissionExist(modulePermissions, permission) {
+    return Array.isArray(modulePermissions) && modulePermissions.includes(permission);
+  },
+       async loadPermissions() {
+            this.loading = true;
+            try {
+                let response = await fetchPermissions();
+                this.res = response.data;
+                this.module_permissions = response.data.data.module_permissions;
+                this.permissions = response.data.data.permissions;
+                this.loading = false;
+                for (let module in this.module_permissions) {
+                  this.selected_permissions[module] = {};
+                  for (let perm of this.permissions) {
+                    this.selected_permissions[module][perm] = this.module_permissions[module].includes(perm);
+                  }
+                }
+                
+            } catch (error) {
+                this.loading = false;
+                showSwal.methods.showSwal({
+                    type: "error",
+                    message: "Oops, something went wrong!",
+                    width: 500
+                });
+            }
+        },
+      async savePermissions() {
+        const formData = new FormData();
+        formData.append('role', this.roleName);
+        if(!this.roleName) {
+          this.show_error = true;
+        }else {
+          this.show_error = false ;
+        }
+        // Flatten nested permissions object
+        Object.entries(this.selected_permissions).forEach(([module, perms]) => {
+          Object.entries(perms).forEach(([perm, value]) => {
+            // Only append selected (true) permissions
+            if (value) {
+              formData.append(`permissions[${module}][]`, perm);
+            }
+          });
+        });
+        try{
+          this.loading = true;
+          await createRole(formData);
+        }catch(error) {
+           this.loading = false;
+          console.log(error)
+        }
+         this.loading = false;
+      },
+    },
+  };
+  </script>
+  
+  <style scoped>
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .role-input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+  padding: 5px;
+}
+
+.role-input:focus {
+  outline: none;
+ border: 2px solid #92d4cb;
+}
+  </style>
+  

@@ -1,0 +1,130 @@
+# ==============================================================================
+# APACHE .HTACCESS FOR VUE.JS SPA
+# - Access URL: yourdomain.com
+# - 'dist' folder is in public_html/
+# - Vue publicPath and Router base are '/'
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Rewrite Engine
+# ------------------------------------------------------------------------------
+RewriteEngine On
+
+# Set the base for all rewrite rules (relative to public_html)
+RewriteBase /
+
+# ------------------------------------------------------------------------------
+# HTTPS Redirection (Optional but Recommended if SSL is configured in HestiaCP)
+# ------------------------------------------------------------------------------
+# <IfModule mod_rewrite.c>
+#   RewriteCond %{HTTPS} off
+#   RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC] # For HestiaCP/Nginx proxy
+#   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# ------------------------------------------------------------------------------
+# Core SPA Routing and Asset Handling
+# ------------------------------------------------------------------------------
+
+# 1. If the request URI, when prefixed with 'dist/', matches an actual file or directory
+#    inside the 'dist' subdirectory, then rewrite the request to serve it from 'dist'.
+#    This handles requests for your assets (JS, CSS, images) like:
+#    yourdomain.com/js/app.js -> serves public_html/dist/js/app.js
+#    yourdomain.com/css/style.css -> serves public_html/dist/css/style.css
+RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -d
+RewriteRule ^(.*)$ dist/$1 [L]
+
+# 2. For any other request (typically Vue Router paths like yourdomain.com/about,
+#    or the root yourdomain.com/), if it's not an existing file or directory
+#    in the public_html root itself (after the above rule didn't match an asset in dist),
+#    then serve the main SPA index file from the 'dist' folder.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ dist/index.html [L,QSA]
+
+# ------------------------------------------------------------------------------
+# Caching (mod_expires)
+# ------------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+
+  # HTML files (like your dist/index.html) should not be cached aggressively
+  # or set to no-cache to ensure users get the latest app shell.
+  <FilesMatch "\.html?$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType application/xml "access plus 0 seconds"
+  ExpiresByType text/xml "access plus 0 seconds"
+
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 week"
+
+  ExpiresByType video/ogg "access plus 1 month"
+  ExpiresByType audio/ogg "access plus 1 month"
+  ExpiresByType video/mp4 "access plus 1 month"
+  ExpiresByType video/webm "access plus 1 month"
+
+  ExpiresByType application/font-woff "access plus 1 month"
+  ExpiresByType application/font-woff2 "access plus 1 month"
+  ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+  ExpiresByType application/x-font-ttf "access plus 1 month"
+  ExpiresByType font/opentype "access plus 1 month"
+
+  # CSS and JavaScript (Vue CLI typically hashes these, so they can be cached long-term)
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Compression (mod_deflate)
+# ------------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE application/javascript application/rss+xml application/vnd.ms-fontobject application/x-font application/x-font-opentype application/x-font-truetype application/x-font-ttf application/x-javascript application/xhtml+xml application/xml font/opentype font/otf font/ttf image/svg+xml image/x-icon text/css text/html text/javascript text/plain text/xml
+
+  BrowserMatch ^Mozilla/4 gzip-only-text/html
+  BrowserMatch ^Mozilla/4\.0[678] no-gzip
+  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+  Header append Vary User-Agent
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# Security Headers (Optional but Recommended)
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  # Content-Security-Policy (CSP) is powerful but needs careful configuration specific to your app.
+  # Example (very basic, likely needs more sources):
+  # Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# File Access and Directory Listing
+# ------------------------------------------------------------------------------
+# Prevent directory listing (e.g., if someone navigates to an empty subdirectory)
+Options -Indexes
+
+# Block access to .htaccess itself (Apache usually has a global rule for this, but an extra layer doesn't hurt)
+<Files ".htaccess">
+  Require all denied
+</Files>
+
+# Allow .well-known for things like Let's Encrypt SSL verification
+<IfModule mod_rewrite.c>
+    RewriteRule ^\.well-known/ - [L]
+</IfModule>
+
+# ==============================================================================
+# END APACHE .HTACCESS
+# =================================================S=============================

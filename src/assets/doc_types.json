@@ -1,0 +1,16 @@
+[
+    { "id": 1, "name": "Aadhaar" },
+    { "id": 2, "name": "PAN Card" },
+    { "id": 3, "name": "Voter's ID" },
+    { "id": 4, "name": "SSLC Book" },
+    { "id": 5, "name": "Driving License" },
+    {"id" : 6 ,  "name" : "Bank Statements"},
+    {"id" : 7 ,  "name" : "Salary Slip"},
+    {"id" : 8 ,  "name" : "Address Proof"},
+    {"id" : 9 ,  "name" : "ITR/Form 16"},
+    {"id" : 10 ,  "name" : "Mortgage Documents"},
+    {"id" : 11 , "name" : "Land Documents"},
+    {"id" : 11 , "name" : "MOD (Memorandum of Deposit) Documents"},
+    {"id" : 11 , "name" : "Jewelry / Collateral Documents"}
+    
+]

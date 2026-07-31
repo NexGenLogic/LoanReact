@@ -1,0 +1,179 @@
+import axios from 'axios';
+
+const API_URL = process.env.VUE_APP_API_BASE_URL;
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
+// Save token
+export function saveToken(token, type = 'admin') {
+  if(type == 'admin')
+  localStorage.setItem('admin_token', token);
+  else if(type == 'merchant')
+  localStorage.setItem('user_token', token);
+}
+
+// Get token
+export function getToken() {
+  // return {
+  //   admin_token: localStorage.getItem('admin_token'),
+  //   user_token: localStorage.getItem('user_token'),
+  // };
+  var admin_token = localStorage.getItem('admin_token');
+  var user_token = localStorage.getItem('user_token');
+  return (user_token && user_token != '') ? user_token : admin_token;
+}
+
+// Set token
+export function setApiToken() {
+  var admin_token = localStorage.getItem('admin_token');
+  var user_token = localStorage.getItem('user_token');
+
+  api.defaults.headers.common['Authorization'] = `Bearer ` + (user_token && user_token != '') ? user_token : admin_token;
+}
+
+// Clear token
+export function clearToken() {
+  delete api.defaults.headers.common['Authorization'];
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('user_token');
+  localStorage.removeItem('permissions');
+  localStorage.removeItem('user');
+  localStorage.removeItem('superadmin');
+}
+
+// Interceptor
+api.interceptors.response.use(
+  response => {
+    
+    return response;
+  },
+  error => {
+    if (error.response) {
+        const status = error.response.status;
+
+        if (status === 401) {
+            clearToken();
+            // localStorage.removeItem('access_token');
+           
+        }
+
+        if (status === 422 && error.response.data.errors) {
+            const errors = error.response.data.errors;
+
+            // Loop through and build HTML string
+            let html = '';
+            for (const field in errors) {
+            if (Array.isArray(errors[field])) {
+                errors[field].forEach(message => {
+                html += `<div style="color: red;">${message}</div>`;
+                });
+            }
+            }
+
+            // Return validation errors in a special format
+            return Promise.reject({ type: 'validation', html, raw: error });
+        }
+        if (status === 500 ) {
+            console.log(error)
+            let html = `<div style="color: red;">${error.message}</div>`;
+            return Promise.reject({ type: 'validation', html, raw: error });
+        }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Other API functions
+export async function register(formData) {
+  try {
+    const response = await api.post('/merchant/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+}
+
+export async function login(email, password,url) {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+    try {
+    const response = await api.post(url, formData);
+    const token = response.data.misc.auth.access_token;
+    const userData = response.data.data;
+    const permissions = response.data.misc.permissions;
+    const is_superAdmin = response.data.data.is_super_admin ? true : false;
+    localStorage.setItem('superadmin', is_superAdmin);
+    if (token) {
+      saveToken(token ,is_superAdmin ? 'admin' : 'merchant');
+    }
+    if(permissions) {
+      localStorage.setItem('permissions', JSON.stringify(permissions));
+    }
+    if(userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
+  
+    return response.data;
+} catch (error) {
+    
+    throw error.response ? error.response.data : error;
+  }
+  }
+  
+  export async function logout() {
+    try {
+      await api.post('/merchant/auth/logout', {});
+    } catch (err) {
+      // Optional: handle error
+    } finally {
+      clearToken(); // <-- Clears Axios headers and localStorage
+      window.location.href = '/login'; // Optional redirect after logout
+    }
+  }
+  // Other example API
+  export async function getUserProfile() {
+    return await api.get('/merchant/profile');
+  }
+
+  export function is_allowed(module, permission = 'read') {
+    const isSuperAdmin = localStorage.getItem('superadmin') === 'true';
+    if (isSuperAdmin) return true;
+  
+    const permissions = localStorage.getItem('permissions');
+    if (!permissions) return false;
+  
+    try {
+      const parsed = JSON.parse(permissions);
+      return parsed[module]?.[permission] === true;
+    } catch (e) {
+      console.error('Invalid permissions JSON', e);
+      return false;
+    }
+  }
+
+  export async function get_user_profile() {
+    return await api.get('/merchant/auth/me');
+
+  }
+
+  export async function update_user_profile(user) {
+    return await api.post('/merchant/auth/me',user);
+
+  }
+
+  export async function update_password(user) {
+    return await api.patch('/merchant/update-password',user);
+
+  }
+export default api;

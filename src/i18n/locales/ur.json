@@ -1,0 +1,19 @@
+{
+  "message": {
+    "hello": "ہیلو دنیا",
+    "hi": "سلام",
+      "myprofile" : "My Profile",
+      "Dashboard" : "Dashboard",
+      "Store" : "Store",
+      "Branch" : "Branch",
+      "Staffs" : "Staffs",
+      "Staff" : "Staff",
+      "Roles" : "Roles",
+      "Sales" : "Sales",
+      "Pos" : "Pos",
+      "Coupons" : "Coupons",
+      "Main Categories" : "Main Categories",
+      "Cards" : "Cards",
+      "Categories" : "Categories"
+  }
+}

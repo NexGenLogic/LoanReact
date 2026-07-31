@@ -1,0 +1,15 @@
+[
+    { "id": 1, "name": "PAN Card", "category": "Identity" },
+    { "id": 2, "name": "Aadhaar Card", "category": "Identity" },
+    { "id": 3, "name": "Passport", "category": "Identity" },
+    { "id": 4, "name": "Driving License", "category": "Identity" },
+    { "id": 5, "name": "Voter's ID", "category": "Identity" },
+    { "id": 6, "name": "Signed Investment Agreement", "category": "Agreement" },
+    { "id": 7, "name": "Proof of Payment / Transaction Receipt", "category": "Financial" },
+    { "id": 8, "name": "Bank Statement (Latest)", "category": "Financial" },
+    { "id": 9, "name": "Source of Funds Declaration", "category": "Financial" },
+    { "id": 10, "name": "Address Proof (Utility Bill, etc.)", "category": "Identity" },
+    { "id": 11, "name": "Company Incorporation Certificate", "category": "Business" },
+    { "id": 12, "name": "Board Resolution (for Companies)", "category": "Business" },
+    { "id": 13, "name": "Other", "category": "Other" }
+]
