@@ -129,7 +129,7 @@ import MaterialInput from "@/components/MaterialInput.vue";
 import MaterialButton from "@/components/MaterialButton.vue";
 import CountrySelect from "@/views/components/CountrySelect.vue";
 import * as Yup from 'yup';
-import { updateRole } from "@/utils/employee_services";
+import { updateRole } from "@/utils/role_services";
 import showSwal from "@/mixins/showSwal.js";
 
 export default {
