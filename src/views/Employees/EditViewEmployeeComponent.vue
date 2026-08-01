@@ -286,43 +286,48 @@ export default {
         async handleSubmit(values) {
             
             this.isLoading = true;
+            this.error_msg = "";
             const formData = new FormData();
             if (this.selectedImage) {
                 formData.append("image", this.selectedImage);
-            }else if (!this.previewImage && this.employee.image) {
+            } else if (!this.previewImage && this.employee.image) {
                 formData.append("remove_image", 1);
             }
-            formData.append('name', values.user.name);
-            formData.append('email', values.user.email);
-            formData.append('phone_number', values.user.phone_number);
-            formData.append('address_line1', values.user.address_line1);
-            formData.append('address_line2', values.user.address_line2);
-            formData.append('city', values.user.city);
-            formData.append('country', values.user.country);
-            formData.append('state', values.user.state); // Include if API expects state]
-            formData.append('password', values.user.password);
-            formData.append('password_confirmation', values.user.password);
-            formData.append('role_id', values.user.role_id);
-            formData.append('postal_code', values.user.postal_code);
+            formData.append('name', values.user.name || '');
+            formData.append('email', values.user.email || '');
+            formData.append('phone_number', values.user.phone_number || '');
+            formData.append('address_line1', values.user.address_line1 || '');
+            formData.append('address_line2', values.user.address_line2 || '');
+            formData.append('city', values.user.city || '');
+            formData.append('country', values.user.country || '');
+            formData.append('state', values.user.state || '');
+            if (values.user.password) {
+                formData.append('password', values.user.password);
+                formData.append('password_confirmation', values.user.password);
+            }
+            if (values.user.role_id) {
+                formData.append('role_id', values.user.role_id);
+            }
+            formData.append('postal_code', values.user.postal_code || '');
 
             try {
                 await updateEmployee(this.employee.id, formData);
                 showSwal.methods.showSwal({
                     type: "success",
-                    message: "Store updated successfully!",
+                    message: "Employee updated successfully!",
                     width: 500
                 });
                 this.$emit('employee-updated');
 
             } catch (error) {
-                console.error("Error creating employee:", error);
+                console.error("Error updating employee:", error);
                 let errorMessage = "Failed to update employee. Please try again.";
-                if(error.html) {
-                    errorMessage = error.html
+                if (error.html) {
+                    errorMessage = error.html;
+                } else if (error.message) {
+                    errorMessage = error.message;
                 }
                 this.error_msg = errorMessage;
-                
-
             } finally {
                 this.isLoading = false;
             }

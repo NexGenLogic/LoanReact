@@ -70,18 +70,20 @@ export default {
 
     await this.fetchNotifications();
 
-    window.Echo.private(`App.Models.User.${this.user.id}`)
-      .notification((notification) => {
-        this.notifications.unshift({
-            ...notification,
-            id: notification.id || Date.now(),
-            created_at: new Date().toISOString(),
-            data: { 
-              message: notification.message,
-              url: notification.url || '/' // Ensure new notifications have a URL
-            } 
+    if (window.Echo) {
+      window.Echo.private(`App.Models.User.${this.user.id}`)
+        .notification((notification) => {
+          this.notifications.unshift({
+              ...notification,
+              id: notification.id || Date.now(),
+              created_at: new Date().toISOString(),
+              data: { 
+                message: notification.message,
+                url: notification.url || '/' // Ensure new notifications have a URL
+              } 
+          });
         });
-      });
+    }
   },
   methods: {
     onNotificationClick() {

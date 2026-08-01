@@ -4,9 +4,6 @@ const API_URL = process.env.VUE_APP_API_BASE_URL;
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
 });
 
 // Set token

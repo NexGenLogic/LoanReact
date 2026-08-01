@@ -17,17 +17,19 @@ window.Pusher = Pusher;
 // Retrieve the auth token from local storage
 const token = localStorage.getItem('access_token');
 
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: process.env.VUE_APP_PUSHER_APP_KEY, // Correct for Vue CLI
-    cluster: process.env.VUE_APP_PUSHER_APP_CLUSTER, // Correct for Vue CLI
-    forceTLS: true,
-    auth: {
-        headers: {
-            Authorization: `Bearer ${token}`
-        },
-    },
-});
+if (process.env.VUE_APP_PUSHER_APP_KEY) {
+  window.Echo = new Echo({
+      broadcaster: 'pusher',
+      key: process.env.VUE_APP_PUSHER_APP_KEY,
+      cluster: process.env.VUE_APP_PUSHER_APP_CLUSTER || 'mt1',
+      forceTLS: true,
+      auth: {
+          headers: {
+              Authorization: `Bearer ${token}`
+          },
+      },
+  });
+}
 // --- END: LARAVEL ECHO SETUP ---
 
 if (token) {
